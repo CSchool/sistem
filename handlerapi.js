@@ -1,9 +1,12 @@
+// This file provides common API for handlers
+
 var fs = require("fs");
 var session = require("./session");
 var Cookies = require("cookies");
 var url = require("url");
 
-function writeFile(response, filename, callback, contentMap, request) {
+function writeFile(response, filename, callback, contentMap, request) { 
+// Writes a file from location to response
     fs.readFile(filename, "utf8", function(err, data) {
         if (err)
             throw err;
@@ -25,6 +28,8 @@ function writeFile(response, filename, callback, contentMap, request) {
 }
 
 function pageContentMap(request, response, callback) {
+// Weird function, used to replace $__SOMETHING__$ in static pages with text, that can differ
+// in different situations
     var username = session.getUsername(request, response);
     var rightControls = '<a href="/authorize">Войти</a> | <a href="/register">Зарегистрироваться</a>';
     var cb = function() {
@@ -47,7 +52,13 @@ function pageContentMap(request, response, callback) {
     }
 }
 
-function writeContents(response, content, callback, request) {
+function writeContents(response, request, content, callback) {
+// Used to print page content with header and footer
+// Call like this: 
+// writeContents(response, request, function(response, end) {
+//    <YOUR PAGE CODE HERE>
+//    end();
+//})
     var cb = function() {
         response.end();
         if (callback)

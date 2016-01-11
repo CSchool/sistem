@@ -1,3 +1,7 @@
+// This file handles main page. Currently only list of contests is displayed
+// Paths:
+//  - /
+
 var api = require("../handlerapi");
 var contests = require("../database/contests");
 var session = require("../session");
@@ -6,7 +10,7 @@ function handleIndex(response, request) {
     response.writeHead(200, {
         "Content-type": "text/html"
     });
-    api.writeContents(response, function(response, callback) {
+    api.writeContents(response, request, function(response, callback) {
         contests.Contest.find({}, function(err, result) {
             session.isAdmin(request, response, function(isAdmin) {
                 var formed = "";
@@ -24,7 +28,7 @@ function handleIndex(response, request) {
                                 <form action="/contest" method="GET">
                                     <input name="id" type="hidden" value="${contest._id}" />
                                     ${((contest.startTime < now) || isAdmin) ? (session.isAuthorized(request, response)?
-                                    `<button name="action" value="participate" type="submit">
+                                    `<button type="submit">
                                         Войти
                                     </button>`:"<i>Авторизируйтесь для участия</i>"):
                                     "<i>Турнир не начался</i>"}
@@ -50,7 +54,7 @@ function handleIndex(response, request) {
                 callback();
             })
         })
-    }, undefined, request)
+    })
 }
 
 exports.handlersMap = {

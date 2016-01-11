@@ -1,3 +1,9 @@
+// This file handles authorization, registration and logoff of users
+// Paths:
+//  - /authorize
+//  - /regiser
+//  - /logoff
+
 var api = require("../handlerapi");
 var formidable = require("formidable");
 var users = require("../database/users");
@@ -10,12 +16,12 @@ function handleAuthorize(response, request) {
         response.writeHead(200, {
             "Content-type": "text/html"
         });
-        api.writeContents(response, function(response, callback) {
+        api.writeContents(response, request, function(response, callback) {
             if (errorMsg) {
                 response.write('<div class="error center">' + errorMsg + '</div>');
             }
             api.writeFile(response, "frontend/authorize.html", callback);
-        }, undefined, request)
+        })
     }
     if (request.method.toLowerCase() == "post") {
         var form = new formidable.IncomingForm();
@@ -57,12 +63,12 @@ function handleRegister(response, request) {
         response.writeHead(200, {
             "Content-type": "text/html"
         });
-        api.writeContents(response, function(response, callback) {
+        api.writeContents(response, request, function(response, callback) {
             if (errorMsg) {
                 response.write('<div class="error center">' + errorMsg + '</div>');
             }
             api.writeFile(response, "frontend/register.html", callback);
-        }, undefined, request)
+        })
     }
     if (request.method.toLowerCase() == "post") {
         var form = new formidable.IncomingForm();

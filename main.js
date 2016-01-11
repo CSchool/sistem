@@ -20,8 +20,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-GLOBAL.version = "0.01";
-
 var server = require("./server");
 var router = require("./router");
 var requestHandlers = require("./requestHandlers");

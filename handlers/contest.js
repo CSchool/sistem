@@ -1,6 +1,11 @@
+// This file handles individual contest page
+// Paths:
+//  - /contest
+
 var api = require("../handlerapi");
 var url = require("url");
 var contests = require("../database/contests");
+var problems = require("../database/problems");
 var session = require("../session");
 
 function handleContest(response, request) {
@@ -8,22 +13,21 @@ function handleContest(response, request) {
     response.writeHead(200, {
         "Content-type": "text/html"
     });
-    api.writeContents(response, function(response, callback) {
+    api.writeContents(response, request, function(response, callback) {
         session.isAdmin(request, response, function(isAdmin) {
             var now = new Date();
             var query = url.parse(request.url, true).query;
             var id = null;
             if (query.id)
                 id = query.id;
-            var action = "participate";
-            if (query.action == "manage")
-                action = "manage";
-            if ((!isAuthorized) || (!isAdmin && (action == "manage"))) {
+            if (!isAuthorized) {
                 response.write('<p><div class="error">У Вас нет доступа к запрашиваемой странице</div></p>');
                 callback();
                 return;
             }
-            contests.Contest.find({_id: id}, function(err, result) {
+            contests.Contest.find({_id: id})
+            .populate('problems')
+            .exec(function(err, result) {
                 if (result) {
                     if ((result[0].startTime > now) && !isAdmin) {
                         response.write('<p><div class="error">У Вас нет доступа к запрашиваемой странице</div></p>');
@@ -31,8 +35,6 @@ function handleContest(response, request) {
                         return;
                     }
                     response.write('<h1 class="center">' + result[0].name + '</h1>');
-                    if (action == "manage")
-                        response.write('<h3 class="center">Управление</h3>');
                     var problems = result[0].problems;
                     problems.sort(function(a, b) {
                         return (a.name - b.name) ;
@@ -45,8 +47,8 @@ function handleContest(response, request) {
                                 <td><b>Новая задача</b></td>
                                 <td>
                                     <form action="/problem">
-                                        <input name="contest_id" type="hidden" value="${id}" />
-                                        <input name="id" type="hidden" value="-1" />
+                                        <input name="contestId" type="hidden" value="${id}" />
+                                        <input name="problemId" type="hidden" value="-1" />
                                         <button name="action" value="manage" type="submit">
                                             Создать
                                         </button>
@@ -60,15 +62,18 @@ function handleContest(response, request) {
                                 <td>${problem.name}</td>
                                 <td>
                                     <form action="/problem" method="GET">
-                                        <input name="contest_id" type="hidden" value="${id}" />
-                                        <input name="id" type="hidden" value="${problem.id}" />
+                                        <input name="problemId" type="hidden" value="${problem._id}" />
                                         <button name="action" value="participate" type="submit">
                                             Решать
                                         </button>
-                                        ${isAdmin?
-                                        `<button name="action" value="manage" type="submit">
-                                            Управлять
-                                        </button>`:""}
+                                        ${isAdmin?`
+                                        <button name="action" value="manage" type="submit">
+                                            Настроить
+                                        </button>
+                                        <button name="action" value="remove" type="submit">
+                                            Удалить из турнира
+                                        </button>
+                                        `:""}
                                     </form>
                                 </td>
                             </tr>
@@ -89,7 +94,7 @@ function handleContest(response, request) {
                 callback();
             })
         })
-    }, undefined, request);
+    });
 }
 
 exports.handlersMap = {

@@ -1,3 +1,7 @@
+// This file handles admin panel
+// Paths:
+//  - /admin
+
 var api = require("../handlerapi");
 var session = require("../session");
 var users = require("../database/users");
@@ -9,7 +13,7 @@ function handleAdmin(response, request) {
                 "Content-type": "text/html"
             });
 
-            api.writeContents(response, function(response, callback) {
+            api.writeContents(response, request, function(response, callback) {
                 users.User.find({}, function(err, result) {
                     var formed = "";
                     result.forEach(function(user) {
@@ -31,16 +35,16 @@ function handleAdmin(response, request) {
                     `);
                     callback();
                 })
-            }, undefined, request)
+            })
         } else {
             response.writeHead(403, {
                 "Content-type": "text/html"
             });
 
-            api.writeContents(response, function(response, callback) {
+            api.writeContents(response, request, function(response, callback) {
                 response.write('<p><div class="error">У Вас нет доступа к запрашиваемой странице</div></p>');
                 callback();
-            }, undefined, request)
+            })
         }
     })
 }

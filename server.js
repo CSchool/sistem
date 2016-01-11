@@ -29,7 +29,7 @@ function setupDBConnection(callback) {
 
     db.on("open", function() {
         console.log("Connected to DB");
-        //mongoose.set("debug", true);
+        mongoose.set("debug", true);
         if (callback)
             callback();
     })
