@@ -35,7 +35,7 @@ function handleProblem(response, request) {
                     return;
                 }
                 problems.Problem.find({_id: id}, function(err, result) {
-                    if ((result) || ((id === "-1") && (action == "manage"))) {
+                    if ((result) || ((id === "-1") && (action === "manage"))) {
                         var problem;
                         if (result) {
                             problem = result[0]
@@ -132,7 +132,6 @@ function handleProblem(response, request) {
                         }, function(err, problem) {
                             if (err)
                                 throw err;
-                            console.log(problem);
                             if (!id) {
                                 id = problem._id;
                                 contests.Contest.findOneAndUpdate({
