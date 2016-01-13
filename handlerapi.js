@@ -11,14 +11,13 @@ function writeFile(response, filename, callback, contentMap, request) {
         if (err)
             throw err;
         if (contentMap) {
-            contentMap(request, response, function(cMap) {
-                for (var el in cMap) {
-                    data = data.split("$__" + el + "__$").join(cMap[el]);
-                }
-                response.write(data);
-                if (callback)
-                    callback();
-            });
+            var cMap = contentMap(request, response);
+            for (var el in cMap) {
+                data = data.split("$__" + el + "__$").join(cMap[el]);
+            }
+            response.write(data);
+            if (callback)
+                callback();
         } else {
             response.write(data);
             if (callback)
@@ -27,28 +26,33 @@ function writeFile(response, filename, callback, contentMap, request) {
     })
 }
 
-function pageContentMap(request, response, callback) {
+function pageContentMap(request, response) {
 // Weird function, used to replace $__SOMETHING__$ in static pages with text, that can differ
 // in different situations
     var username = session.getUsername(request, response);
-    var rightControls = '<a href="/authorize">Войти</a> | <a href="/register">Зарегистрироваться</a>';
-    var cb = function() {
-        callback({
-            "RIGHT_CONTROLS": rightControls
-        });
-    }
+    var rightControls = `
+        <form style="margin-right: 16px; display: inline" method="POST" action="/authorize">
+            <input type="hidden" name="redirect" value="${request.url.replace(/\"/, "\\\"")}" />
+            <span style="margin-right: 8px">
+                Логин: <input style="width: 75px" type="text" name="username" />
+            </span>
+            <span style="margin-right: 8px">
+                Пароль: <input style="width: 75px" type="password" name="password" />
+            </span>
+            <input type="submit" value="Войти" name="authorize" />
+        </form>
+        <a href="/register">Зарегистрироваться</a>
+    `;
     if (username) {
         rightControls = 'Здравствуйте, <b>' + username +'</b>! ' +
-                        '<a href="/logout">Выйти</a>';
-        session.isAdmin(request, response, function(result) {
-            if (result)
-                rightControls = 'Здравствуйте, <b>' + username +'</b>! ' +
-                                '<a href="/admin">Админка</a> ' +
-                                '<a href="/logout">Выйти</a>';
-            cb();
-        })
-    } else {
-        cb();
+            '<a href="/logout">Выйти</a>';
+        if (session.isAdmin(request, response))
+            rightControls = 'Здравствуйте, <b>' + username +'</b>! ' +
+                '<a href="/admin">Админка</a> ' +
+                '<a href="/logout">Выйти</a>';  
+    }
+    return {
+        "RIGHT_CONTROLS": rightControls
     }
 }
 

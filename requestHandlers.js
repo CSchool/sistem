@@ -1,5 +1,6 @@
 var fs = require("fs");
 var mime = require("mime");
+var util = require("util");
 
 var walk = function(dir) {
     var results = []
@@ -22,12 +23,29 @@ var handlersMap = {};
 var publicFiles = walk("frontend/public");
 publicFiles.forEach(function(file) {
     var clientPath = file.substr(("frontend/public").length);
-    handlersMap[clientPath] = function(response) {
-        response.writeHead(200, {
-            "Content-type": mime.lookup(file)
-        });
-        fs.readFile(file, "utf8", function(err, data) {
-            response.end(data);
+    handlersMap[clientPath] = function(response, request) {
+        fs.stat(file, function(err, data) {
+            if (err)
+                throw err;
+            var lastModReq = request.headers["if-modified-since"];
+            if (lastModReq)
+                lastModReq = new Date(lastModReq).getTime();
+            if (Math.floor(data.mtime.getTime() / 1000) == 
+                Math.floor(lastModReq) / 1000) {
+                response.writeHead(304, {
+                    "Last-modified": data.mtime.toUTCString()
+                });
+                response.end();
+                return;
+            } else {
+                response.writeHead(200, {
+                    "Content-type": mime.lookup(file),
+                    "Last-modified": data.mtime.toUTCString()
+                });
+                fs.readFile(file, "utf8", function(err, data) {
+                    response.end(data);
+                })
+            }
         })
     }
 })
@@ -37,7 +55,7 @@ publicFiles.forEach(function(file) {
 
 var handlers = walk("handlers");
 handlers.forEach(function(handlerPath) {
-    console.log("Loading handler", handlerPath);
+    util.log("Loading handler", handlerPath);
 
     var handler = require("./" + handlerPath);
 

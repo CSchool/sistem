@@ -28,11 +28,11 @@ function handleAuthorize(response, request) {
         var authFail = function() {
             renderPage("Неверный логин или пароль");
         }
-        var authOK = function(username) {
+        var authOK = function(username, path) {
             cookies.set("SSID", session.newSession(username));
             cookies.set("username", username);
             response.writeHead(302, {
-                "Location": "/"
+                "Location": (path || "/")
             });
             response.end();
         }
@@ -47,7 +47,7 @@ function handleAuthorize(response, request) {
                 password: fields.password
             }, function(err, result) {
                 if (result.length > 0)
-                    authOK(fields.username);
+                    authOK(fields.username, fields.redirect);
                 else
                     authFail();
             })
@@ -82,12 +82,14 @@ function handleRegister(response, request) {
                     console.error(err);
                 }
                 else {
-                    cookies.set("SSID", session.newSession(username));
-                    cookies.set("username", username);
-                    response.writeHead(302, {
-                        "Location": "/"
+                    session.reloadUsers(function() { 
+                        cookies.set("SSID", session.newSession(username));
+                        cookies.set("username", username);
+                        response.writeHead(302, {
+                            "Location": "/"
+                        });
+                        response.end();
                     });
-                    response.end();
                 }
             })
         }

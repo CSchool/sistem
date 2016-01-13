@@ -3,10 +3,12 @@ var sessions = {};
 var Cookies = require("cookies");
 var fs = require("fs");
 var users = require("./database/users");
+var util = require("util");
+
+var syncedUsers = {};
 
 function newSession(username) {
 // Start a new session. No password required. Security level is high.
-// TODO: load user collection on server start, dynamically update it, get rid of silly callbacks in isAdmin
     var len = 16;
     var alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMOPQRSTUVWXYZ_-";
     var ssid = "";
@@ -44,24 +46,34 @@ function getUsername(request, response) {
         return null;
 }
 
-function isAdmin(request, response, callback) {
-// Is current user an admin? Find out in callback(answer) {}
+function isAdmin(request, response) {
+// Is current user an admin?
     var username = getUsername(request, response);
     if (!username) {
-        callback(false);
-        return;
+        return false;
     }
-    users.User.find({username: username, group: "admin"}, function(err, result) {
-        if (result.length > 0)
-            callback(true);
-        else
-            callback(false);
-    })
+    return syncedUsers[username].group == 'admin';
 }
 
 function isAuthorized(request, response) {
 // Simple check, if user logged in
     return getUsername(request, response) !== null;
+}
+
+function reloadUsers(callback) {
+    util.log("Syncing users to DB");
+    users.User.find({}, function(err, result) {
+        if (result) {
+            for (var i in result) {
+                syncedUsers[result[i].username] = {
+                    password: result[i].password,
+                    group: result[i].group,
+                    _id: result[i]._id
+                }
+            }
+            callback();
+        }
+    })
 }
 
 exports.newSession = newSession;
@@ -70,3 +82,4 @@ exports.logOut = logOut;
 exports.getUsername = getUsername;
 exports.isAdmin = isAdmin;
 exports.isAuthorized = isAuthorized;
+exports.reloadUsers = reloadUsers;

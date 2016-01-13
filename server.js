@@ -2,6 +2,9 @@ var http = require("http");
 var url = require("url");
 var mongoose = require("mongoose");
 var qs = require("querystring");
+var async = require("async");
+var session = require("./session");
+var util = require("util");
 
 function startHTTPServer(route, handle, callback) {
     function onRequest(request, response) {
@@ -14,7 +17,7 @@ function startHTTPServer(route, handle, callback) {
     }
 
     http.createServer(onRequest).listen(8888);
-    console.log("HTTP Server started");
+    util.log("HTTP Server started");
 
     if (callback)
         callback();
@@ -24,20 +27,24 @@ function setupDBConnection(callback) {
     mongoose.connect("mongodb://localhost/sistem");
     var db = mongoose.connection;
     db.on("error", function() {
-        throw "Failed to setup DB connection";
+        callback("Failed to setup DB connection");
     })
 
     db.on("open", function() {
-        console.log("Connected to DB");
+        util.log("Connected to DB");
         mongoose.set("debug", true);
-        if (callback)
-            callback();
+        callback(null);
     })
 }
 
-function start(route, handle, callback) {
-    setupDBConnection(function() {
-        startHTTPServer(route, handle, callback);
+function start(route, handle) {
+    setupDBConnection(function(err) {
+        if (err)
+            throw err;
+        else
+            session.reloadUsers(function() {
+                startHTTPServer(route, handle)
+            })
     })
 }
 
