@@ -4,6 +4,7 @@
 
 var api = require("../handlerapi");
 var url = require("url");
+var fs = require("fs");
 var contests = require("../database/contests");
 var problems = require("../database/problems");
 var session = require("../session");
@@ -35,65 +36,25 @@ function handleContest(response, request) {
                     callback();
                     return;
                 }
-                response.write('<h1 class="center">' + result[0].name + '</h1>');
                 var problems = result[0].problems;
                 problems.sort(function(a, b) {
                     return (a.name - b.name) ;
                 })
-
-                var tmpl = _.template(`
-                    <table style="margin: 0 auto; min-width: 50%" border="1">
-                        <tr>
-                            <th>Задача</th>
-                            <th>Действия</th>
-                        </tr>
-                        <% if (isAdmin) { %>
-                        <tr>
-                            <td><b>Новая задача</b></td>
-                            <td>
-                                <form action="/problem">
-                                    <input name="contestId" type="hidden" value="<%=contestId%>" />
-                                    <input name="problemId" type="hidden" value="-1" />
-                                    <button name="action" value="manage" type="submit">
-                                        Создать
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        <% }; %>
-                        <% problems.forEach(function(problem) { %>
-                        <tr>
-                            <td><%=problem.name%></td>
-                            <td>
-                                <form action="/problem" method="GET">
-                                    <input name="problemId" type="hidden" value="<%=problem.id%>" />
-                                    <button name="action" value="participate" type="submit">
-                                        Решать
-                                    </button>
-                                    <% if (isAdmin) { %>
-                                    <button name="action" value="manage" type="submit">
-                                        Настроить
-                                    </button>
-                                    <button name="action" value="remove" type="submit">
-                                        Удалить из турнира
-                                    </button>
-                                    <% }; %>
-                                </form>
-                            </td>
-                        </tr>
-                        <% }); %>
-                    </table>
-                `)
-
-                response.write(tmpl({
-                    problems: problems,
-                    isAdmin: isAdmin,
-                    contestId: id
-                }));
+                fs.readFile("frontend/templates/contest.html", "utf8", function(err, data) {
+                    if (err)
+                        throw err;
+                    response.write(_.template(data)({
+                        problems: problems,
+                        isAdmin: isAdmin,
+                        contestId: id,
+                        contest: result[0]
+                    }));
+                    callback();
+                });
             } else {
                 response.write('<p><div class="error">Неверный ID турнира</div></p>');
+                callback();
             }
-            callback();
         })
     });
 }

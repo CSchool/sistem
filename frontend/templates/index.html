@@ -1,0 +1,50 @@
+<h1 class="center">Турниры</h1><br />
+<table style="margin: 0 auto; min-width: 50%" border="1">
+<tr>
+    <th>Название</th>
+    <th>Статус</th>
+    <th>Начало</th>
+    <th>Окончание</th>
+    <th>Действия</th>
+</tr>
+<% if (isAdmin) { %>
+    <tr>
+        <td colspan="4" style="text-align: center"><b>Новый турнир</b></td>
+        <td><button>Создать</button></td>
+    </tr>
+<% }; %>
+<% contests.forEach(function(contest) { %>
+    <% if ((contest.startTime < now) && (contest.endTime > now)) { %>
+    <tr class="bold-row">
+    <% } else { %>
+    <tr>
+    <% } %>
+    <td><%=contest.name %></td>
+    <td>
+        <% if (contest.startTime < now) {
+           if (contest.endTime > now) { %>
+        Идёт
+        <% } else { %>
+        Закончился
+        <% }} else { %>
+        Не начался
+        <% } %>
+    </td>
+    <td><%=contest.startTime.toLocaleString("ru-RU") %></td>
+    <td><%=contest.endTime.toLocaleString("ru-RU") %></td>
+    <td>
+        <form action="/contest" method="GET">
+            <input name="id" type="hidden" value="<%=contest._id %>" />
+            <% if ((contest.startTime < now) || isAdmin) {
+               if (isAuthorized) { %>
+            <button type="submit">Войти</button>
+            <% } else { %>
+            <i>Авторизируйтесь для участия</i>
+            <% }} else { %>
+            <i>Турнир не начался</i>
+            <% }; %>
+        </form>
+    </td>
+    </tr>
+<% }); %>
+</table>
