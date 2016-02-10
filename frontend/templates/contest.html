@@ -24,15 +24,16 @@
             <td>
                 <form action="/problem" method="GET">
                     <input name="problemId" type="hidden" value="<%=problem.id%>" />
+                    <input name="contestId" type="hidden" value="<%=contestId%>" />
                     <button name="action" value="participate" type="submit">
                         Решать
                     </button>
                     <% if (isAdmin) { %>
                     <button name="action" value="manage" type="submit">
-                        Настроить
+                        Редактировать
                     </button>
-                    <button name="action" value="remove" type="submit">
-                        Удалить из турнира
+                    <button name="action" value="delete" type="submit">
+                        Удалить
                     </button>
                     <% }; %>
                 </form>

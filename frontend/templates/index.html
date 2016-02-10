@@ -10,7 +10,12 @@
 <% if (isAdmin) { %>
     <tr>
         <td colspan="4" style="text-align: center"><b>Новый турнир</b></td>
-        <td><button>Создать</button></td>
+        <td>
+            <form method="GET" action="/contest">
+                <input type="hidden" name="id" value="-1" />
+                <button type="submit" name="action" value="manage">Создать</button>
+            </form>
+        </td>
     </tr>
 <% }; %>
 <% contests.forEach(function(contest) { %>
@@ -37,7 +42,11 @@
             <input name="id" type="hidden" value="<%=contest._id %>" />
             <% if ((contest.startTime < now) || isAdmin) {
                if (isAuthorized) { %>
-            <button type="submit">Войти</button>
+            <button type="submit" name="action" value="participate">Войти</button>
+                <% if (isAdmin) { %>
+                    <button type="submit" name="action" value="manage">Редактировать</button>
+                    <button type="submit" name="action" value="delete">Удалить</button>
+                <% } %>
             <% } else { %>
             <i>Авторизируйтесь для участия</i>
             <% }} else { %>
